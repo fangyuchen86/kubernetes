@@ -17,6 +17,7 @@ limitations under the License.
 package kuberuntime
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -150,6 +151,12 @@ type KubeGenericRuntime interface {
 type LegacyLogProvider interface {
 	// Get the last few lines of the logs for a specific container.
 	GetContainerLogTail(uid kubetypes.UID, name, namespace string, containerID kubecontainer.ContainerID) (string, error)
+}
+
+//fyc customer
+type ProberResult struct {
+	RestartCount int  `json:"restartCount"`
+	NeedRestart  bool `json:"needRestart"`
 }
 
 // NewKubeGenericRuntimeManager creates a new kubeGenericRuntimeManager
@@ -623,6 +630,7 @@ func (m *kubeGenericRuntimeManager) computePodActions(pod *v1.Pod, podStatus *ku
 		// The container is running, but kill the container if any of the following condition is met.
 		var message string
 		restart := shouldRestartOnFailure(pod)
+
 		if _, _, changed := containerChanged(&container, containerStatus); changed {
 			message = fmt.Sprintf("Container %s definition changed", container.Name)
 			// Restart regardless of the restart policy because the container
@@ -634,6 +642,17 @@ func (m *kubeGenericRuntimeManager) computePodActions(pod *v1.Pod, podStatus *ku
 		} else if startup, found := m.startupManager.Get(containerStatus.ID); found && startup == proberesults.Failure {
 			// If the container failed the startup probe, we should kill it.
 			message = fmt.Sprintf("Container %s failed startup probe", container.Name)
+		} else if probeResultStr, ok := pod.Annotations["com.finshine/probeResult"]; ok {
+			proberResult := ProberResult{}
+			err := json.Unmarshal([]byte(probeResultStr), &proberResult)
+			klog.Errorf("proberresult in pod %q not correct: %v", format.Pod(pod), err)
+			if proberResult.RestartCount == containerStatus.RestartCount && proberResult.NeedRestart {
+				message = fmt.Sprintf("Container %s failed on customer probe", container.Name)
+			} else {
+				// Keep the container.
+				keepCount++
+				continue
+			}
 		} else {
 			// Keep the container.
 			keepCount++
