@@ -155,8 +155,9 @@ type LegacyLogProvider interface {
 
 //fyc customer
 type ProberResult struct {
-	RestartCount int  `json:"restartCount"`
-	NeedRestart  bool `json:"needRestart"`
+	RestartCount  int  `json:"restartCount"`
+	NeedRestart   bool `json:"needRestart"`
+	LivenessCheck bool `json:"livenessCheck"`
 }
 
 // NewKubeGenericRuntimeManager creates a new kubeGenericRuntimeManager
