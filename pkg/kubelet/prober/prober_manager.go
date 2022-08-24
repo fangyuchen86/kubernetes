@@ -17,6 +17,7 @@ limitations under the License.
 package prober
 
 import (
+	"encoding/json"
 	"sync"
 
 	v1 "k8s.io/api/core/v1"
@@ -27,6 +28,7 @@ import (
 	"k8s.io/component-base/metrics"
 	"k8s.io/klog/v2"
 	kubecontainer "k8s.io/kubernetes/pkg/kubelet/container"
+	kuberuntime "k8s.io/kubernetes/pkg/kubelet/kuberuntime"
 	"k8s.io/kubernetes/pkg/kubelet/prober/results"
 	"k8s.io/kubernetes/pkg/kubelet/status"
 	"k8s.io/kubernetes/pkg/kubelet/util/format"
@@ -68,7 +70,7 @@ type Manager interface {
 
 	// UpdatePodStatus modifies the given PodStatus with the appropriate Ready state for each
 	// container based on container running status, cached probe results and worker states.
-	UpdatePodStatus(types.UID, *v1.PodStatus)
+	UpdatePodStatus(types.UID, *v1.Pod, *v1.PodStatus)
 
 	// Start starts the Manager sync loops.
 	Start()
@@ -231,7 +233,7 @@ func (m *manager) CleanupPods(desiredPods map[types.UID]sets.Empty) {
 	}
 }
 
-func (m *manager) UpdatePodStatus(podUID types.UID, podStatus *v1.PodStatus) {
+func (m *manager) UpdatePodStatus(podUID types.UID, pod *v1.Pod, podStatus *v1.PodStatus) {
 	for i, c := range podStatus.ContainerStatuses {
 		var started bool
 		if c.State.Running == nil {
@@ -251,10 +253,24 @@ func (m *manager) UpdatePodStatus(podUID types.UID, podStatus *v1.PodStatus) {
 				ready = false
 			} else if result, ok := m.readinessManager.Get(kubecontainer.ParseContainerID(c.ContainerID)); ok {
 				ready = result == results.Success
+			} else if probeResultStr, ok := pod.Annotations["com.finshine/probeResult"]; ok {
+				proberResult := kuberuntime.ProberResult{}
+				if err := json.Unmarshal([]byte(probeResultStr), &proberResult); err != nil {
+					klog.Errorf("proberresult in pod %q not correct: %v", format.Pod(pod), err)
+					continue
+				}
+
+				containerStatus := podStatus.ContainerStatuses[i]
+				if proberResult.RestartCount == int(containerStatus.RestartCount) {
+					ready = proberResult.LivenessCheck
+				}
 			} else {
 				// The check whether there is a probe which hasn't run yet.
 				_, exists := m.getWorker(podUID, c.Name, readiness)
-				ready = !exists
+
+				_, customerPorbeExists := pod.Annotations["com.finshine/customLivenessProbe"]
+
+				ready = !(exists || customerPorbeExists)
 			}
 			podStatus.ContainerStatuses[i].Ready = ready
 		}
