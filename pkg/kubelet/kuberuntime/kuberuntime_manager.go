@@ -652,7 +652,7 @@ func (m *kubeGenericRuntimeManager) computePodActions(pod *v1.Pod, podStatus *ku
 				continue
 			}
 
-			if strings.Contains(proberStr, "LivenessProbe") && proberResult.RestartCount == containerStatus.RestartCount && proberResult.LivenessCheck == false {
+			if strings.Contains(proberStr, "livenessProbe") && proberResult.RestartCount == containerStatus.RestartCount && proberResult.LivenessCheck == false {
 				message = fmt.Sprintf("Container %s failed on custom liveness probe", container.Name)
 			} else if strings.Contains(proberStr, "startupProbe") && proberResult.RestartCount == containerStatus.RestartCount && proberResult.StartupCheck == false {
 				message = fmt.Sprintf("Container %s failed on custom startup probe", container.Name)
