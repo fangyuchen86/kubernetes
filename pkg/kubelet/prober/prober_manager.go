@@ -241,17 +241,8 @@ func (m *manager) UpdatePodStatus(podUID types.UID, pod *v1.Pod, podStatus *v1.P
 			started = false
 		} else if result, ok := m.startupManager.Get(kubecontainer.ParseContainerID(c.ContainerID)); ok {
 			started = result == results.Success
-		} else if probeResultStr, ok := pod.Annotations["com.finshine/probeResult"]; ok {
-			proberResult := kuberuntime.ProberResult{}
-			if err := json.Unmarshal([]byte(probeResultStr), &proberResult); err != nil {
-				klog.Errorf("proberresult in pod %q not correct: %v", format.Pod(pod), err)
-				continue
-			}
-
-			containerStatus := podStatus.ContainerStatuses[i]
-			if proberResult.RestartCount == int(containerStatus.RestartCount) {
-				started = proberResult.StartupCheck
-			}
+		} else if result, ok := existCustomStartupCheck(pod, &c); ok {
+			started = result
 		} else {
 			// The check whether there is a probe which hasn't run yet.
 			_, exists := m.getWorker(podUID, c.Name, startup)
@@ -273,17 +264,8 @@ func (m *manager) UpdatePodStatus(podUID types.UID, pod *v1.Pod, podStatus *v1.P
 				ready = false
 			} else if result, ok := m.readinessManager.Get(kubecontainer.ParseContainerID(c.ContainerID)); ok {
 				ready = result == results.Success
-			} else if probeResultStr, ok := pod.Annotations["com.finshine/probeResult"]; ok {
-				proberResult := kuberuntime.ProberResult{}
-				if err := json.Unmarshal([]byte(probeResultStr), &proberResult); err != nil {
-					klog.Errorf("proberresult in pod %q not correct: %v", format.Pod(pod), err)
-					continue
-				}
-
-				containerStatus := podStatus.ContainerStatuses[i]
-				if proberResult.RestartCount == int(containerStatus.RestartCount) {
-					ready = proberResult.ReadinessCheck
-				}
+			} else if result, ok := existCustomReadinessCheck(pod, &c); ok {
+				ready = result
 			} else {
 				// The check whether there is a probe which hasn't run yet.
 				_, exists := m.getWorker(podUID, c.Name, readiness)
@@ -309,6 +291,42 @@ func (m *manager) UpdatePodStatus(podUID types.UID, pod *v1.Pod, podStatus *v1.P
 		}
 		podStatus.InitContainerStatuses[i].Ready = ready
 	}
+}
+
+func existCustomStartupCheck(pod *v1.Pod, containerStatus *v1.ContainerStatus) (bool, bool) {
+	probeStr, customerProbeExists := pod.Annotations["com.finshine/customProber"]
+	if customerProbeExists && strings.Contains(probeStr, "startupProbe") {
+		if probeResultStr, ok := pod.Annotations["com.finshine/probeResult"]; ok {
+			proberResult := kuberuntime.ProberResult{}
+			if err := json.Unmarshal([]byte(probeResultStr), &proberResult); err != nil {
+				klog.Errorf("proberresult in pod %q not correct: %v", format.Pod(pod), err)
+				return true, false
+			}
+			if proberResult.RestartCount == int(containerStatus.RestartCount) {
+				return proberResult.StartupCheck, true
+			}
+		}
+
+	}
+	return true, false
+}
+
+func existCustomReadinessCheck(pod *v1.Pod, containerStatus *v1.ContainerStatus) (bool, bool) {
+	probeStr, customerProbeExists := pod.Annotations["com.finshine/customProber"]
+	if customerProbeExists && strings.Contains(probeStr, "readinessProbe") {
+		if probeResultStr, ok := pod.Annotations["com.finshine/probeResult"]; ok {
+			proberResult := kuberuntime.ProberResult{}
+			if err := json.Unmarshal([]byte(probeResultStr), &proberResult); err != nil {
+				klog.Errorf("proberresult in pod %q not correct: %v", format.Pod(pod), err)
+				return true, false
+			}
+			if proberResult.RestartCount == int(containerStatus.RestartCount) {
+				return proberResult.ReadinessCheck, true
+			}
+		}
+
+	}
+	return true, false
 }
 
 func (m *manager) getWorker(podUID types.UID, containerName string, probeType probeType) (*worker, bool) {
