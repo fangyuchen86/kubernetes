@@ -18,6 +18,8 @@ package prober
 
 import (
 	"encoding/json"
+	"k8s.io/kubernetes/pkg/kubelet/kuberuntime"
+	"strings"
 	"sync"
 
 	v1 "k8s.io/api/core/v1"
@@ -28,7 +30,6 @@ import (
 	"k8s.io/component-base/metrics"
 	"k8s.io/klog/v2"
 	kubecontainer "k8s.io/kubernetes/pkg/kubelet/container"
-	kuberuntime "k8s.io/kubernetes/pkg/kubelet/kuberuntime"
 	"k8s.io/kubernetes/pkg/kubelet/prober/results"
 	"k8s.io/kubernetes/pkg/kubelet/status"
 	"k8s.io/kubernetes/pkg/kubelet/util/format"
@@ -240,10 +241,29 @@ func (m *manager) UpdatePodStatus(podUID types.UID, pod *v1.Pod, podStatus *v1.P
 			started = false
 		} else if result, ok := m.startupManager.Get(kubecontainer.ParseContainerID(c.ContainerID)); ok {
 			started = result == results.Success
+		} else if probeResultStr, ok := pod.Annotations["com.finshine/probeResult"]; ok {
+			proberResult := kuberuntime.ProberResult{}
+			if err := json.Unmarshal([]byte(probeResultStr), &proberResult); err != nil {
+				klog.Errorf("proberresult in pod %q not correct: %v", format.Pod(pod), err)
+				continue
+			}
+
+			containerStatus := podStatus.ContainerStatuses[i]
+			if proberResult.RestartCount == int(containerStatus.RestartCount) {
+				started = proberResult.StartupCheck
+			}
 		} else {
 			// The check whether there is a probe which hasn't run yet.
 			_, exists := m.getWorker(podUID, c.Name, startup)
-			started = !exists
+
+			probeStr, customerProbeExists := pod.Annotations["com.finshine/customProber"]
+
+			startupProbeExist := false
+			if customerProbeExists && strings.Contains(probeStr, "startupProbe") {
+				startupProbeExist = true
+			}
+
+			started = !(exists || startupProbeExist)
 		}
 		podStatus.ContainerStatuses[i].Started = &started
 
@@ -262,15 +282,20 @@ func (m *manager) UpdatePodStatus(podUID types.UID, pod *v1.Pod, podStatus *v1.P
 
 				containerStatus := podStatus.ContainerStatuses[i]
 				if proberResult.RestartCount == int(containerStatus.RestartCount) {
-					ready = proberResult.LivenessCheck
+					ready = proberResult.ReadinessCheck
 				}
 			} else {
 				// The check whether there is a probe which hasn't run yet.
 				_, exists := m.getWorker(podUID, c.Name, readiness)
 
-				_, customerPorbeExists := pod.Annotations["com.finshine/customLivenessProbe"]
+				probeStr, customerProbeExists := pod.Annotations["com.finshine/customProber"]
 
-				ready = !(exists || customerPorbeExists)
+				readinessProbeExist := false
+				if customerProbeExists && strings.Contains(probeStr, "readinessProbe") {
+					readinessProbeExist = true
+				}
+
+				ready = !(exists || readinessProbeExist)
 			}
 			podStatus.ContainerStatuses[i].Ready = ready
 		}

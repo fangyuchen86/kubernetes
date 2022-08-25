@@ -155,9 +155,10 @@ type LegacyLogProvider interface {
 
 //fyc customer
 type ProberResult struct {
-	RestartCount  int  `json:"restartCount"`
-	NeedRestart   bool `json:"needRestart"`
-	LivenessCheck bool `json:"livenessCheck"`
+	RestartCount   int  `json:"restartCount"`
+	LivenessCheck  bool `json:"LivenessCheck"`
+	ReadinessCheck bool `json:"readinessCheck"`
+	StartupCheck   bool `json:"startupCheck"`
 }
 
 // NewKubeGenericRuntimeManager creates a new kubeGenericRuntimeManager
@@ -643,12 +644,17 @@ func (m *kubeGenericRuntimeManager) computePodActions(pod *v1.Pod, podStatus *ku
 		} else if startup, found := m.startupManager.Get(containerStatus.ID); found && startup == proberesults.Failure {
 			// If the container failed the startup probe, we should kill it.
 			message = fmt.Sprintf("Container %s failed startup probe", container.Name)
-		} else if probeResultStr, ok := pod.Annotations["com.finshine/probeResult"]; ok {
+		} else if probeResultStr, ok := customProbe(pod); ok {
 			proberResult := ProberResult{}
-			err := json.Unmarshal([]byte(probeResultStr), &proberResult)
-			klog.Errorf("proberresult in pod %q not correct: %v", format.Pod(pod), err)
-			if proberResult.RestartCount == containerStatus.RestartCount && proberResult.NeedRestart {
-				message = fmt.Sprintf("Container %s failed on customer probe", container.Name)
+			if err := json.Unmarshal([]byte(probeResultStr), &proberResult); err != nil {
+				klog.Errorf("proberresult in pod %q not correct: %v", format.Pod(pod), err)
+				continue
+			}
+
+			if proberResult.RestartCount == containerStatus.RestartCount && proberResult.LivenessCheck == false {
+				message = fmt.Sprintf("Container %s failed on custom liveness probe", container.Name)
+			} else if proberResult.RestartCount == containerStatus.RestartCount && proberResult.StartupCheck == false {
+				message = fmt.Sprintf("Container %s failed on custom startup probe", container.Name)
 			} else {
 				// Keep the container.
 				keepCount++
@@ -681,6 +687,12 @@ func (m *kubeGenericRuntimeManager) computePodActions(pod *v1.Pod, podStatus *ku
 	}
 
 	return changes
+}
+
+func customProbe(pod *v1.Pod) (string, bool) {
+	probeResultStr, ok1 := pod.Annotations["com.finshine/probeResult"]
+	_, ok2 := pod.Annotations["com.finshine/customProber"]
+	return probeResultStr, ok1 && ok2
 }
 
 // SyncPod syncs the running pod into the desired pod by executing following steps:
