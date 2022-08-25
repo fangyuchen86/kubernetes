@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"os"
 	goruntime "runtime"
+	"strings"
 	"time"
 
 	cadvisorapi "github.com/google/cadvisor/info/v1"
@@ -644,16 +645,16 @@ func (m *kubeGenericRuntimeManager) computePodActions(pod *v1.Pod, podStatus *ku
 		} else if startup, found := m.startupManager.Get(containerStatus.ID); found && startup == proberesults.Failure {
 			// If the container failed the startup probe, we should kill it.
 			message = fmt.Sprintf("Container %s failed startup probe", container.Name)
-		} else if probeResultStr, ok := customProbe(pod); ok {
+		} else if probeResultStr, proberStr, ok := customProbe(pod); ok {
 			proberResult := ProberResult{}
 			if err := json.Unmarshal([]byte(probeResultStr), &proberResult); err != nil {
 				klog.Errorf("proberresult in pod %q not correct: %v", format.Pod(pod), err)
 				continue
 			}
 
-			if proberResult.RestartCount == containerStatus.RestartCount && proberResult.LivenessCheck == false {
+			if strings.Contains(proberStr, "LivenessProbe") && proberResult.RestartCount == containerStatus.RestartCount && proberResult.LivenessCheck == false {
 				message = fmt.Sprintf("Container %s failed on custom liveness probe", container.Name)
-			} else if proberResult.RestartCount == containerStatus.RestartCount && proberResult.StartupCheck == false {
+			} else if strings.Contains(proberStr, "startupProbe") && proberResult.RestartCount == containerStatus.RestartCount && proberResult.StartupCheck == false {
 				message = fmt.Sprintf("Container %s failed on custom startup probe", container.Name)
 			} else {
 				// Keep the container.
@@ -689,10 +690,10 @@ func (m *kubeGenericRuntimeManager) computePodActions(pod *v1.Pod, podStatus *ku
 	return changes
 }
 
-func customProbe(pod *v1.Pod) (string, bool) {
+func customProbe(pod *v1.Pod) (string, string, bool) {
 	probeResultStr, ok1 := pod.Annotations["com.finshine/probeResult"]
-	_, ok2 := pod.Annotations["com.finshine/customProber"]
-	return probeResultStr, ok1 && ok2
+	proberStr, ok2 := pod.Annotations["com.finshine/customProber"]
+	return probeResultStr, proberStr, ok1 && ok2
 }
 
 // SyncPod syncs the running pod into the desired pod by executing following steps:
