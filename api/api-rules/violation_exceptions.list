@@ -75,6 +75,7 @@ API rule violation: list_type_missing,k8s.io/api/core/v1,ConfigMapProjection,Ite
 API rule violation: list_type_missing,k8s.io/api/core/v1,ConfigMapVolumeSource,Items
 API rule violation: list_type_missing,k8s.io/api/core/v1,Container,Args
 API rule violation: list_type_missing,k8s.io/api/core/v1,Container,Command
+API rule violation: list_type_missing,k8s.io/api/core/v1,Container,CustomProbe
 API rule violation: list_type_missing,k8s.io/api/core/v1,Container,Env
 API rule violation: list_type_missing,k8s.io/api/core/v1,Container,EnvFrom
 API rule violation: list_type_missing,k8s.io/api/core/v1,Container,VolumeDevices
@@ -88,6 +89,7 @@ API rule violation: list_type_missing,k8s.io/api/core/v1,EndpointSubset,Ports
 API rule violation: list_type_missing,k8s.io/api/core/v1,Endpoints,Subsets
 API rule violation: list_type_missing,k8s.io/api/core/v1,EphemeralContainerCommon,Args
 API rule violation: list_type_missing,k8s.io/api/core/v1,EphemeralContainerCommon,Command
+API rule violation: list_type_missing,k8s.io/api/core/v1,EphemeralContainerCommon,CustomProbe
 API rule violation: list_type_missing,k8s.io/api/core/v1,EphemeralContainerCommon,Env
 API rule violation: list_type_missing,k8s.io/api/core/v1,EphemeralContainerCommon,EnvFrom
 API rule violation: list_type_missing,k8s.io/api/core/v1,EphemeralContainerCommon,VolumeDevices
@@ -141,6 +143,7 @@ API rule violation: list_type_missing,k8s.io/api/core/v1,PodSpec,ReadinessGates
 API rule violation: list_type_missing,k8s.io/api/core/v1,PodSpec,Tolerations
 API rule violation: list_type_missing,k8s.io/api/core/v1,PodSpec,Volumes
 API rule violation: list_type_missing,k8s.io/api/core/v1,PodStatus,Conditions
+API rule violation: list_type_missing,k8s.io/api/core/v1,PodStatus,ContainerProbeResults
 API rule violation: list_type_missing,k8s.io/api/core/v1,PodStatus,ContainerStatuses
 API rule violation: list_type_missing,k8s.io/api/core/v1,PodStatus,EphemeralContainerStatuses
 API rule violation: list_type_missing,k8s.io/api/core/v1,PodStatus,InitContainerStatuses
@@ -383,6 +386,8 @@ API rule violation: names_match,k8s.io/api/core/v1,NodeSpec,DoNotUseExternalID
 API rule violation: names_match,k8s.io/api/core/v1,PersistentVolumeSource,CephFS
 API rule violation: names_match,k8s.io/api/core/v1,PersistentVolumeSource,StorageOS
 API rule violation: names_match,k8s.io/api/core/v1,PodSpec,DeprecatedServiceAccount
+API rule violation: names_match,k8s.io/api/core/v1,ProbeResult,ReadinessProbe
+API rule violation: names_match,k8s.io/api/core/v1,ProbeResult,StartupProbe
 API rule violation: names_match,k8s.io/api/core/v1,RBDPersistentVolumeSource,CephMonitors
 API rule violation: names_match,k8s.io/api/core/v1,RBDPersistentVolumeSource,RBDImage
 API rule violation: names_match,k8s.io/api/core/v1,RBDPersistentVolumeSource,RBDPool
