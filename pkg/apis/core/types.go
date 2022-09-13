@@ -2102,6 +2102,18 @@ type Probe struct {
 	TerminationGracePeriodSeconds *int64
 }
 
+// CustomProbe describe support cusomer prober type
+// +enum
+type CustomProbe string
+
+const (
+	CustomProbeLivnessProbe CustomProbe = "livenessProbe"
+
+	CustomProbeStartupProbe CustomProbe = "startupProbe"
+
+	CustomProbeReadinessProbe CustomProbe = "ReadinessProbe"
+)
+
 // PullPolicy describes a policy for if/when to pull a container image
 type PullPolicy string
 
@@ -2214,6 +2226,8 @@ type Container struct {
 	ReadinessProbe *Probe
 	// +optional
 	StartupProbe *Probe
+	// +optional
+	CustomProbe []CustomProbe
 	// +optional
 	Lifecycle *Lifecycle
 	// Required.
@@ -2387,6 +2401,28 @@ type ContainerStatus struct {
 	// +optional
 	ContainerID string
 	Started     *bool
+}
+
+type ContainerProbeResult struct {
+	Name        string
+	ProbeResult ProbeResult
+}
+
+type CustomProbeResult string
+
+const (
+	CustomProbeSuccess CustomProbeResult = "success"
+	CustomProbeFailure CustomProbeResult = "failure"
+)
+
+type ProbeResult struct {
+	RestartCount int32
+	// +optional
+	LivenessProbe CustomProbeResult
+	// +optional
+	StartupProbe CustomProbeResult
+	// +optional
+	ReadinessProbe CustomProbeResult
 }
 
 // PodPhase is a label for the condition of a pod at the current time.
@@ -3406,6 +3442,9 @@ type PodStatus struct {
 	// Status for any ephemeral containers that have run in this pod.
 	// +optional
 	EphemeralContainerStatuses []ContainerStatus
+
+	// +optional
+	ContainerProbeResults []ContainerProbeResult
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

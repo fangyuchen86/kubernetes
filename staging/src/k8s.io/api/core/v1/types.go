@@ -2226,6 +2226,18 @@ type Probe struct {
 	TerminationGracePeriodSeconds *int64 `json:"terminationGracePeriodSeconds,omitempty" protobuf:"varint,7,opt,name=terminationGracePeriodSeconds"`
 }
 
+// CustomProbe describe support cusomer prober type
+// +enum
+type CustomProbe string
+
+const (
+	CustomProbeLivnessProbe CustomProbe = "livenessProbe"
+
+	CustomProbeStartupProbe CustomProbe = "startupProbe"
+
+	CustomProbeReadinessProbe CustomProbe = "ReadinessProbe"
+)
+
 // PullPolicy describes a policy for if/when to pull a container image
 // +enum
 type PullPolicy string
@@ -2399,6 +2411,9 @@ type Container struct {
 	// More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
 	// +optional
 	StartupProbe *Probe `json:"startupProbe,omitempty" protobuf:"bytes,22,opt,name=startupProbe"`
+	// CusomProbe indicates that the prober which uses third party prober to do the prober
+	// +optional
+	CustomProbe []CustomProbe `json:"customProbe,omitempty" protobuf:"bytes,23,opt,name=customProbe"`
 	// Actions that the management system should take in response to container lifecycle events.
 	// Cannot be updated.
 	// +optional
@@ -2613,6 +2628,28 @@ type ContainerStatus struct {
 	// Is always true when no startupProbe is defined.
 	// +optional
 	Started *bool `json:"started,omitempty" protobuf:"varint,9,opt,name=started"`
+}
+
+type ContainerProbeResult struct {
+	Name        string      `json:"name" protobuf:"bytes,1,opt,name=name"`
+	ProbeResult ProbeResult `json:"probeResult" protobuf:"bytes,2,opt,name=probeResult"`
+}
+
+type CustomProbeResult string
+
+const (
+	CustomProbeSuccess CustomProbeResult = "success"
+	CustomProbeFailure CustomProbeResult = "failure"
+)
+
+type ProbeResult struct {
+	RestartCount int32 `json:"restartCount" protobuf:"varint,1,opt,name=restartCount"`
+	// +optional
+	LivenessProbe CustomProbeResult `json:"livenessProbe,omitempty" protobuf:"bytes,2,opt,name=livenessProbe"`
+	// +optional
+	StartupProbe CustomProbeResult `json:"StartupProbe,omitempty" protobuf:"bytes,3,opt,name=startupProbe"`
+	// +optional
+	ReadinessProbe CustomProbeResult `json:"ReadinessProbe,omitempty" protobuf:"bytes,4,opt,name=readinessProbe"`
 }
 
 // PodPhase is a label for the condition of a pod at the current time.
@@ -3766,6 +3803,9 @@ type EphemeralContainerCommon struct {
 	// Probes are not allowed for ephemeral containers.
 	// +optional
 	StartupProbe *Probe `json:"startupProbe,omitempty" protobuf:"bytes,22,opt,name=startupProbe"`
+	// CusomProbe indicates that the prober which uses third party prober to do the prober
+	// +optional
+	CustomProbe []CustomProbe `json:"customProbe,omitempty" protobuf:"bytes,23,opt,name=customProbe"`
 	// Lifecycle is not allowed for ephemeral containers.
 	// +optional
 	Lifecycle *Lifecycle `json:"lifecycle,omitempty" protobuf:"bytes,12,opt,name=lifecycle"`
@@ -3937,6 +3977,9 @@ type PodStatus struct {
 	// Status for any ephemeral containers that have run in this pod.
 	// +optional
 	EphemeralContainerStatuses []ContainerStatus `json:"ephemeralContainerStatuses,omitempty" protobuf:"bytes,13,rep,name=ephemeralContainerStatuses"`
+
+	// +optional
+	ContainerProbeResults []ContainerProbeResult `json:"containerProbeResults,omitempty" protobuf:"bytes,14,rep,name=containerProbeResults"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
