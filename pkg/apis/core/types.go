@@ -3341,6 +3341,8 @@ type EphemeralContainerCommon struct {
 	// Probes are not allowed for ephemeral containers.
 	// +optional
 	StartupProbe *Probe
+	// +optional
+	CustomProbe []CustomProbe
 	// Lifecycle is not allowed for ephemeral containers.
 	// +optional
 	Lifecycle *Lifecycle
