@@ -39,6 +39,7 @@ type ContainerApplyConfiguration struct {
 	LivenessProbe            *ProbeApplyConfiguration                `json:"livenessProbe,omitempty"`
 	ReadinessProbe           *ProbeApplyConfiguration                `json:"readinessProbe,omitempty"`
 	StartupProbe             *ProbeApplyConfiguration                `json:"startupProbe,omitempty"`
+	CustomProbes             []corev1.CustomProbe                    `json:"customProbes,omitempty"`
 	Lifecycle                *LifecycleApplyConfiguration            `json:"lifecycle,omitempty"`
 	TerminationMessagePath   *string                                 `json:"terminationMessagePath,omitempty"`
 	TerminationMessagePolicy *corev1.TerminationMessagePolicy        `json:"terminationMessagePolicy,omitempty"`
@@ -193,6 +194,16 @@ func (b *ContainerApplyConfiguration) WithReadinessProbe(value *ProbeApplyConfig
 // If called multiple times, the StartupProbe field is set to the value of the last call.
 func (b *ContainerApplyConfiguration) WithStartupProbe(value *ProbeApplyConfiguration) *ContainerApplyConfiguration {
 	b.StartupProbe = value
+	return b
+}
+
+// WithCustomProbes adds the given value to the CustomProbes field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the CustomProbes field.
+func (b *ContainerApplyConfiguration) WithCustomProbes(values ...corev1.CustomProbe) *ContainerApplyConfiguration {
+	for i := range values {
+		b.CustomProbes = append(b.CustomProbes, values[i])
+	}
 	return b
 }
 

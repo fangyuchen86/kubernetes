@@ -176,6 +176,16 @@ func (b *EphemeralContainerApplyConfiguration) WithStartupProbe(value *ProbeAppl
 	return b
 }
 
+// WithCustomProbes adds the given value to the CustomProbes field in the declarative configuration
+// and returns the receiver, so that objects can be build by chaining "With" function invocations.
+// If called multiple times, values provided by each call will be appended to the CustomProbes field.
+func (b *EphemeralContainerApplyConfiguration) WithCustomProbes(values ...corev1.CustomProbe) *EphemeralContainerApplyConfiguration {
+	for i := range values {
+		b.CustomProbes = append(b.CustomProbes, values[i])
+	}
+	return b
+}
+
 // WithLifecycle sets the Lifecycle field in the declarative configuration to the given value
 // and returns the receiver, so that objects can be built by chaining "With" function invocations.
 // If called multiple times, the Lifecycle field is set to the value of the last call.

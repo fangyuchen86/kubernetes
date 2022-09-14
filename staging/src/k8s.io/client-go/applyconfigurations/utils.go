@@ -549,6 +549,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &applyconfigurationscorev1.ContainerImageApplyConfiguration{}
 	case corev1.SchemeGroupVersion.WithKind("ContainerPort"):
 		return &applyconfigurationscorev1.ContainerPortApplyConfiguration{}
+	case corev1.SchemeGroupVersion.WithKind("ContainerProbeResult"):
+		return &applyconfigurationscorev1.ContainerProbeResultApplyConfiguration{}
 	case corev1.SchemeGroupVersion.WithKind("ContainerState"):
 		return &applyconfigurationscorev1.ContainerStateApplyConfiguration{}
 	case corev1.SchemeGroupVersion.WithKind("ContainerStateRunning"):
@@ -563,6 +565,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &applyconfigurationscorev1.CSIPersistentVolumeSourceApplyConfiguration{}
 	case corev1.SchemeGroupVersion.WithKind("CSIVolumeSource"):
 		return &applyconfigurationscorev1.CSIVolumeSourceApplyConfiguration{}
+	case corev1.SchemeGroupVersion.WithKind("CustomProbeData"):
+		return &applyconfigurationscorev1.CustomProbeDataApplyConfiguration{}
 	case corev1.SchemeGroupVersion.WithKind("DaemonEndpoint"):
 		return &applyconfigurationscorev1.DaemonEndpointApplyConfiguration{}
 	case corev1.SchemeGroupVersion.WithKind("DownwardAPIProjection"):
@@ -753,6 +757,8 @@ func ForKind(kind schema.GroupVersionKind) interface{} {
 		return &applyconfigurationscorev1.ProbeApplyConfiguration{}
 	case corev1.SchemeGroupVersion.WithKind("ProbeHandler"):
 		return &applyconfigurationscorev1.ProbeHandlerApplyConfiguration{}
+	case corev1.SchemeGroupVersion.WithKind("ProbeResult"):
+		return &applyconfigurationscorev1.ProbeResultApplyConfiguration{}
 	case corev1.SchemeGroupVersion.WithKind("ProjectedVolumeSource"):
 		return &applyconfigurationscorev1.ProjectedVolumeSourceApplyConfiguration{}
 	case corev1.SchemeGroupVersion.WithKind("QuobyteVolumeSource"):

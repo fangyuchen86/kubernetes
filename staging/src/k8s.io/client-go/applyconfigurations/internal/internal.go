@@ -3919,6 +3919,12 @@ var schemaYAML = typed.YAMLObject(`types:
           elementType:
             scalar: string
           elementRelationship: atomic
+    - name: customProbes
+      type:
+        list:
+          elementType:
+            scalar: string
+          elementRelationship: atomic
     - name: env
       type:
         list:
@@ -4037,6 +4043,17 @@ var schemaYAML = typed.YAMLObject(`types:
       type:
         scalar: string
       default: TCP
+- name: io.k8s.api.core.v1.ContainerProbeResult
+  map:
+    fields:
+    - name: name
+      type:
+        scalar: string
+      default: ""
+    - name: probeResult
+      type:
+        namedType: io.k8s.api.core.v1.ProbeResult
+      default: {}
 - name: io.k8s.api.core.v1.ContainerState
   map:
     fields:
@@ -4129,6 +4146,17 @@ var schemaYAML = typed.YAMLObject(`types:
       type:
         namedType: io.k8s.api.core.v1.ContainerState
       default: {}
+- name: io.k8s.api.core.v1.CustomProbeData
+  map:
+    fields:
+    - name: customProbeResult
+      type:
+        scalar: string
+      default: ""
+    - name: restartCount
+      type:
+        scalar: numeric
+      default: 0
 - name: io.k8s.api.core.v1.DaemonEndpoint
   map:
     fields:
@@ -4306,6 +4334,12 @@ var schemaYAML = typed.YAMLObject(`types:
             scalar: string
           elementRelationship: atomic
     - name: command
+      type:
+        list:
+          elementType:
+            scalar: string
+          elementRelationship: atomic
+    - name: customProbes
       type:
         list:
           elementType:
@@ -5936,6 +5970,12 @@ var schemaYAML = typed.YAMLObject(`types:
           elementRelationship: associative
           keys:
           - type
+    - name: containerProbeResults
+      type:
+        list:
+          elementType:
+            namedType: io.k8s.api.core.v1.ContainerProbeResult
+          elementRelationship: atomic
     - name: containerStatuses
       type:
         list:
@@ -6085,6 +6125,18 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: timeoutSeconds
       type:
         scalar: numeric
+- name: io.k8s.api.core.v1.ProbeResult
+  map:
+    fields:
+    - name: ReadinessProbe
+      type:
+        namedType: io.k8s.api.core.v1.CustomProbeData
+    - name: StartupProbe
+      type:
+        namedType: io.k8s.api.core.v1.CustomProbeData
+    - name: livenessProbe
+      type:
+        namedType: io.k8s.api.core.v1.CustomProbeData
 - name: io.k8s.api.core.v1.ProjectedVolumeSource
   map:
     fields:
