@@ -260,10 +260,10 @@ func (m *manager) CleanupPods(desiredPods map[types.UID]sets.Empty) {
 func (m *manager) UpdatePodStatus(podUID types.UID, pod *v1.Pod, podStatus *v1.PodStatus) {
 	for i, c := range podStatus.ContainerStatuses {
 		var started bool
-		var customProber []v1.CustomProbe
+		var customProbers []v1.CustomProbe
 		for _, container := range pod.Spec.Containers {
 			if container.Name == c.Name {
-				customProber = container.CustomProbe
+				customProbers = container.CustomProbes
 				break
 			}
 		}
@@ -271,12 +271,12 @@ func (m *manager) UpdatePodStatus(podUID types.UID, pod *v1.Pod, podStatus *v1.P
 			started = false
 		} else if result, ok := m.startupManager.Get(kubecontainer.ParseContainerID(c.ContainerID)); ok {
 			started = result == results.Success
-		} else if result, ok := GetCustomProbeResult(c.Name, v1.CustomProbeStartupProbe, customProber, podStatus.ContainerProbeResults); ok {
+		} else if result, ok := GetCustomProbeResult(c.Name, v1.CustomProbeStartupProbe, customProbers, podStatus.ContainerProbeResults); ok {
 			started = c.RestartCount == result.RestartCount && result.ProbeResult == v1.CustomProbeSuccess
 		} else {
 			// The check whether there is a probe which hasn't run yet.
 			_, exists := m.getWorker(podUID, c.Name, startup)
-			customProberExists := CustomProbeExist(v1.CustomProbeStartupProbe, customProber)
+			customProberExists := CustomProbeExist(v1.CustomProbeStartupProbe, customProbers)
 			started = !(exists || customProberExists)
 		}
 		podStatus.ContainerStatuses[i].Started = &started
@@ -287,7 +287,7 @@ func (m *manager) UpdatePodStatus(podUID types.UID, pod *v1.Pod, podStatus *v1.P
 				ready = false
 			} else if result, ok := m.readinessManager.Get(kubecontainer.ParseContainerID(c.ContainerID)); ok && result == results.Success {
 				ready = true
-			} else if result, ok := GetCustomProbeResult(c.Name, v1.CustomProbeReadinessProbe, customProber, podStatus.ContainerProbeResults); ok {
+			} else if result, ok := GetCustomProbeResult(c.Name, v1.CustomProbeReadinessProbe, customProbers, podStatus.ContainerProbeResults); ok {
 				ready = c.RestartCount == result.RestartCount && result.ProbeResult == v1.CustomProbeSuccess
 			} else {
 				// The check whether there is a probe which hasn't run yet.
@@ -301,7 +301,7 @@ func (m *manager) UpdatePodStatus(podUID types.UID, pod *v1.Pod, podStatus *v1.P
 						klog.InfoS("Failed to trigger a manual run", "probe", w.probeType.String())
 					}
 				}
-				if CustomProbeExist(v1.CustomProbeReadinessProbe, customProber) {
+				if CustomProbeExist(v1.CustomProbeReadinessProbe, customProbers) {
 					ready = false
 				}
 			}

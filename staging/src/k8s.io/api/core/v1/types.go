@@ -2413,7 +2413,7 @@ type Container struct {
 	StartupProbe *Probe `json:"startupProbe,omitempty" protobuf:"bytes,22,opt,name=startupProbe"`
 	// CusomProbe indicates that the prober which uses third party prober to do the prober
 	// +optional
-	CustomProbe []CustomProbe `json:"customProbe,omitempty" protobuf:"bytes,23,opt,name=customProbe"`
+	CustomProbes []CustomProbe `json:"customProbes,omitempty" protobuf:"bytes,23,opt,name=customProbes"`
 	// Actions that the management system should take in response to container lifecycle events.
 	// Cannot be updated.
 	// +optional
@@ -3805,7 +3805,7 @@ type EphemeralContainerCommon struct {
 	StartupProbe *Probe `json:"startupProbe,omitempty" protobuf:"bytes,22,opt,name=startupProbe"`
 	// CusomProbe indicates that the prober which uses third party prober to do the prober
 	// +optional
-	CustomProbe []CustomProbe `json:"customProbe,omitempty" protobuf:"bytes,23,opt,name=customProbe"`
+	CustomProbes []CustomProbe `json:"customProbes,omitempty" protobuf:"bytes,23,opt,name=customProbes"`
 	// Lifecycle is not allowed for ephemeral containers.
 	// +optional
 	Lifecycle *Lifecycle `json:"lifecycle,omitempty" protobuf:"bytes,12,opt,name=lifecycle"`

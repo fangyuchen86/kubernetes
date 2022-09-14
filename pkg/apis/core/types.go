@@ -2227,7 +2227,7 @@ type Container struct {
 	// +optional
 	StartupProbe *Probe
 	// +optional
-	CustomProbe []CustomProbe
+	CustomProbes []CustomProbe
 	// +optional
 	Lifecycle *Lifecycle
 	// Required.
@@ -3342,7 +3342,7 @@ type EphemeralContainerCommon struct {
 	// +optional
 	StartupProbe *Probe
 	// +optional
-	CustomProbe []CustomProbe
+	CustomProbes []CustomProbe
 	// Lifecycle is not allowed for ephemeral containers.
 	// +optional
 	Lifecycle *Lifecycle
