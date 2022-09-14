@@ -2411,18 +2411,22 @@ type ContainerProbeResult struct {
 type CustomProbeResult string
 
 const (
-	CustomProbeSuccess CustomProbeResult = "success"
-	CustomProbeFailure CustomProbeResult = "failure"
+	CustomProbeSuccess CustomProbeResult = "Success"
+	CustomProbeFailure CustomProbeResult = "Failure"
 )
 
-type ProbeResult struct {
+type CustomProbeData struct {
 	RestartCount int32
+	ProbeResult  CustomProbeResult
+}
+
+type ProbeResult struct {
 	// +optional
-	LivenessProbe CustomProbeResult
+	LivenessProbe *CustomProbeData
 	// +optional
-	StartupProbe CustomProbeResult
+	StartupProbe *CustomProbeData
 	// +optional
-	ReadinessProbe CustomProbeResult
+	ReadinessProbe *CustomProbeData
 }
 
 // PodPhase is a label for the condition of a pod at the current time.

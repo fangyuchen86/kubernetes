@@ -330,12 +330,7 @@ func CustomProbeExist(probeType v1.CustomProbe, customProber []v1.CustomProbe) b
 	return false
 }
 
-type CustomProbeResult struct {
-	ProbeResult  v1.CustomProbeResult
-	RestartCount int32
-}
-
-func GetCustomProbeResult(name string, probeType v1.CustomProbe, customProber []v1.CustomProbe, containerProbeResult []v1.ContainerProbeResult) (*CustomProbeResult, bool) {
+func GetCustomProbeResult(name string, probeType v1.CustomProbe, customProber []v1.CustomProbe, containerProbeResult []v1.ContainerProbeResult) (*v1.CustomProbeData, bool) {
 	if !CustomProbeExist(probeType, customProber) || len(containerProbeResult) == 0 {
 		return nil, false
 	}
@@ -355,32 +350,11 @@ func GetCustomProbeResult(name string, probeType v1.CustomProbe, customProber []
 
 	switch probeType {
 	case v1.CustomProbeStartupProbe:
-		if probeResult.StartupProbe != "" {
-			return &CustomProbeResult{
-				ProbeResult:  probeResult.ReadinessProbe,
-				RestartCount: 0,
-			}, true
-		} else {
-			return nil, false
-		}
+		return probeResult.StartupProbe, probeResult.StartupProbe != nil
 	case v1.CustomProbeLivnessProbe:
-		if probeResult.LivenessProbe != "" {
-			return &CustomProbeResult{
-				ProbeResult:  probeResult.LivenessProbe,
-				RestartCount: 0,
-			}, true
-		} else {
-			return nil, false
-		}
+		return probeResult.LivenessProbe, probeResult.LivenessProbe != nil
 	case v1.CustomProbeReadinessProbe:
-		if probeResult.ReadinessProbe != "" {
-			return &CustomProbeResult{
-				ProbeResult:  probeResult.ReadinessProbe,
-				RestartCount: 0,
-			}, true
-		} else {
-			return nil, false
-		}
+		return probeResult.ReadinessProbe, probeResult.ReadinessProbe != nil
 	default:
 		return nil, false
 	}
