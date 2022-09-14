@@ -16048,7 +16048,7 @@ func schema_k8sio_api_core_v1_Container(ref common.ReferenceCallback) common.Ope
 							Ref:         ref("k8s.io/api/core/v1.Probe"),
 						},
 					},
-					"customProbe": {
+					"customProbes": {
 						SchemaProps: spec.SchemaProps{
 							Description: "CusomProbe indicates that the prober which uses third party prober to do the prober",
 							Type:        []string{"array"},
@@ -17178,7 +17178,7 @@ func schema_k8sio_api_core_v1_EphemeralContainer(ref common.ReferenceCallback) c
 							Ref:         ref("k8s.io/api/core/v1.Probe"),
 						},
 					},
-					"customProbe": {
+					"customProbes": {
 						SchemaProps: spec.SchemaProps{
 							Description: "CusomProbe indicates that the prober which uses third party prober to do the prober",
 							Type:        []string{"array"},
@@ -17446,7 +17446,7 @@ func schema_k8sio_api_core_v1_EphemeralContainerCommon(ref common.ReferenceCallb
 							Ref:         ref("k8s.io/api/core/v1.Probe"),
 						},
 					},
-					"customProbe": {
+					"customProbes": {
 						SchemaProps: spec.SchemaProps{
 							Description: "CusomProbe indicates that the prober which uses third party prober to do the prober",
 							Type:        []string{"array"},

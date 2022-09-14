@@ -789,8 +789,8 @@ func (in *Container) DeepCopyInto(out *Container) {
 		*out = new(Probe)
 		(*in).DeepCopyInto(*out)
 	}
-	if in.CustomProbe != nil {
-		in, out := &in.CustomProbe, &out.CustomProbe
+	if in.CustomProbes != nil {
+		in, out := &in.CustomProbes, &out.CustomProbes
 		*out = make([]CustomProbe, len(*in))
 		copy(*out, *in)
 	}
@@ -1405,8 +1405,8 @@ func (in *EphemeralContainerCommon) DeepCopyInto(out *EphemeralContainerCommon) 
 		*out = new(Probe)
 		(*in).DeepCopyInto(*out)
 	}
-	if in.CustomProbe != nil {
-		in, out := &in.CustomProbe, &out.CustomProbe
+	if in.CustomProbes != nil {
+		in, out := &in.CustomProbes, &out.CustomProbes
 		*out = make([]CustomProbe, len(*in))
 		copy(*out, *in)
 	}
