@@ -17,6 +17,7 @@ limitations under the License.
 package prober
 
 import (
+	utilfeature "k8s.io/apiserver/pkg/util/feature"
 	"sync"
 	"time"
 
@@ -26,6 +27,7 @@ import (
 	"k8s.io/client-go/tools/record"
 	"k8s.io/component-base/metrics"
 	"k8s.io/klog/v2"
+	"k8s.io/kubernetes/pkg/features"
 	kubecontainer "k8s.io/kubernetes/pkg/kubelet/container"
 	"k8s.io/kubernetes/pkg/kubelet/prober/results"
 	"k8s.io/kubernetes/pkg/kubelet/status"
@@ -84,7 +86,7 @@ type Manager interface {
 
 	// UpdatePodStatus modifies the given PodStatus with the appropriate Ready state for each
 	// container based on container running status, cached probe results and worker states.
-	UpdatePodStatus(types.UID, *v1.PodStatus)
+	UpdatePodStatus(types.UID, *v1.Pod, *v1.PodStatus)
 }
 
 type manager struct {
@@ -255,7 +257,7 @@ func (m *manager) CleanupPods(desiredPods map[types.UID]sets.Empty) {
 	}
 }
 
-func (m *manager) UpdatePodStatus(podUID types.UID, podStatus *v1.PodStatus) {
+func (m *manager) UpdatePodStatus(podUID types.UID, pod *v1.Pod, podStatus *v1.PodStatus) {
 	for i, c := range podStatus.ContainerStatuses {
 		var started bool
 		if c.State.Running == nil {
@@ -299,6 +301,73 @@ func (m *manager) UpdatePodStatus(podUID types.UID, podStatus *v1.PodStatus) {
 			ready = true
 		}
 		podStatus.InitContainerStatuses[i].Ready = ready
+	}
+}
+
+func CustomProbeExist(probeType v1.CustomProbe, customProber []v1.CustomProbe) bool {
+	if utilfeature.DefaultFeatureGate.Enabled(features.CustomContainerProber) && len(customProber) != 0 {
+		for _, v := range customProber {
+			if v == probeType {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+type CustomProbeResult struct {
+	probeResult  v1.CustomProbeResult
+	RestartCount int32
+}
+
+func GetCustomProbeResult(name string, probeType v1.CustomProbe, customProber []v1.CustomProbe, containerProbeResult []v1.ContainerProbeResult) (*CustomProbeResult, bool) {
+	if !CustomProbeExist(probeType, customProber) || len(containerProbeResult) == 0 {
+		return nil, false
+	}
+
+	var probeResult v1.ProbeResult
+	found := false
+	for _, v := range containerProbeResult {
+		if v.Name == name {
+			probeResult = v.ProbeResult
+			found = true
+		}
+	}
+
+	if !found {
+		return nil, false
+	}
+
+	switch probeType {
+	case v1.CustomProbeStartupProbe:
+		if probeResult.StartupProbe != "" {
+			return &CustomProbeResult{
+				probeResult:  probeResult.ReadinessProbe,
+				RestartCount: 0,
+			}, true
+		} else {
+			return nil, false
+		}
+	case v1.CustomProbeLivnessProbe:
+		if probeResult.LivenessProbe != "" {
+			return &CustomProbeResult{
+				probeResult:  probeResult.LivenessProbe,
+				RestartCount: 0,
+			}, true
+		} else {
+			return nil, false
+		}
+	case v1.CustomProbeReadinessProbe:
+		if probeResult.ReadinessProbe != "" {
+			return &CustomProbeResult{
+				probeResult:  probeResult.ReadinessProbe,
+				RestartCount: 0,
+			}, true
+		} else {
+			return nil, false
+		}
+	default:
+		return nil, false
 	}
 }
 

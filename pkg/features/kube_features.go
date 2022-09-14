@@ -209,6 +209,9 @@ const (
 	// Enables support for time zones in CronJobs.
 	CronJobTimeZone featuregate.Feature = "CronJobTimeZone"
 
+	// owner: @fangyuchen86
+	CustomContainerProber featuregate.Feature = "CustomContainerProber"
+
 	// owner: @smarterclayton
 	// alpha: v1.21
 	// beta: v1.22
@@ -870,9 +873,6 @@ const (
 	// instead of changing each file on the volumes recursively.
 	// Initial implementation focused on ReadWriteOncePod volumes.
 	SELinuxMountReadWriteOncePod featuregate.Feature = "SELinuxMountReadWriteOncePod"
-
-	// owner: @fangyuchen86
-	CustomContainerProber featuregate.Feature = "CustomContainerProber"
 )
 
 func init() {
@@ -931,6 +931,8 @@ var defaultKubernetesFeatureGates = map[featuregate.Feature]featuregate.FeatureS
 	ControllerManagerLeaderMigration: {Default: true, PreRelease: featuregate.GA, LockToDefault: true}, // remove in 1.26
 
 	CronJobTimeZone: {Default: true, PreRelease: featuregate.Beta},
+
+	CustomContainerProber: {Default: false, PreRelease: featuregate.Alpha},
 
 	DaemonSetUpdateSurge: {Default: true, PreRelease: featuregate.GA, LockToDefault: true}, // remove in 1.27
 
@@ -1113,8 +1115,6 @@ var defaultKubernetesFeatureGates = map[featuregate.Feature]featuregate.FeatureS
 	NodeInclusionPolicyInPodTopologySpread: {Default: false, PreRelease: featuregate.Alpha},
 
 	SELinuxMountReadWriteOncePod: {Default: false, PreRelease: featuregate.Alpha},
-
-	CustomContainerProber: {Default: false, PreRelease: featuregate.Alpha},
 
 	// inherited features from generic apiserver, relisted here to get a conflict if it is changed
 	// unintentionally on either side:

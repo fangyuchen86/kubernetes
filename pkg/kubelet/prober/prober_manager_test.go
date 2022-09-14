@@ -293,7 +293,7 @@ func TestUpdatePodStatus(t *testing.T) {
 	m.startupManager.Set(kubecontainer.ParseContainerID(startedNoReadiness.ContainerID), results.Success, &v1.Pod{})
 	m.readinessManager.Set(kubecontainer.ParseContainerID(terminated.ContainerID), results.Success, &v1.Pod{})
 
-	m.UpdatePodStatus(testPodUID, &podStatus)
+	m.UpdatePodStatus(testPodUID, nil, &podStatus)
 
 	expectedReadiness := map[probeKey]bool{
 		{testPodUID, unprobed.Name, readiness}:              true,
