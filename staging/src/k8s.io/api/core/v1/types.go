@@ -2638,8 +2638,8 @@ type ContainerProbeResult struct {
 type CustomProbeResult string
 
 const (
-	CustomProbeSuccess CustomProbeResult = "success"
-	CustomProbeFailure CustomProbeResult = "failure"
+	CustomProbeSuccess CustomProbeResult = "Success"
+	CustomProbeFailure CustomProbeResult = "Failure"
 )
 
 type ProbeResult struct {
