@@ -341,6 +341,7 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"k8s.io/api/core/v1.ContainerStateTerminated":                                                     schema_k8sio_api_core_v1_ContainerStateTerminated(ref),
 		"k8s.io/api/core/v1.ContainerStateWaiting":                                                        schema_k8sio_api_core_v1_ContainerStateWaiting(ref),
 		"k8s.io/api/core/v1.ContainerStatus":                                                              schema_k8sio_api_core_v1_ContainerStatus(ref),
+		"k8s.io/api/core/v1.CustomProbeData":                                                              schema_k8sio_api_core_v1_CustomProbeData(ref),
 		"k8s.io/api/core/v1.DaemonEndpoint":                                                               schema_k8sio_api_core_v1_DaemonEndpoint(ref),
 		"k8s.io/api/core/v1.DownwardAPIProjection":                                                        schema_k8sio_api_core_v1_DownwardAPIProjection(ref),
 		"k8s.io/api/core/v1.DownwardAPIVolumeFile":                                                        schema_k8sio_api_core_v1_DownwardAPIVolumeFile(ref),
@@ -16472,6 +16473,33 @@ func schema_k8sio_api_core_v1_ContainerStatus(ref common.ReferenceCallback) comm
 	}
 }
 
+func schema_k8sio_api_core_v1_CustomProbeData(ref common.ReferenceCallback) common.OpenAPIDefinition {
+	return common.OpenAPIDefinition{
+		Schema: spec.Schema{
+			SchemaProps: spec.SchemaProps{
+				Type: []string{"object"},
+				Properties: map[string]spec.Schema{
+					"restartCount": {
+						SchemaProps: spec.SchemaProps{
+							Default: 0,
+							Type:    []string{"integer"},
+							Format:  "int32",
+						},
+					},
+					"customProbeResult": {
+						SchemaProps: spec.SchemaProps{
+							Default: "",
+							Type:    []string{"string"},
+							Format:  "",
+						},
+					},
+				},
+				Required: []string{"restartCount", "customProbeResult"},
+			},
+		},
+	}
+}
+
 func schema_k8sio_api_core_v1_DaemonEndpoint(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
@@ -23076,35 +23104,26 @@ func schema_k8sio_api_core_v1_ProbeResult(ref common.ReferenceCallback) common.O
 			SchemaProps: spec.SchemaProps{
 				Type: []string{"object"},
 				Properties: map[string]spec.Schema{
-					"restartCount": {
-						SchemaProps: spec.SchemaProps{
-							Default: 0,
-							Type:    []string{"integer"},
-							Format:  "int32",
-						},
-					},
 					"livenessProbe": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
+							Ref: ref("k8s.io/api/core/v1.CustomProbeData"),
 						},
 					},
 					"StartupProbe": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
+							Ref: ref("k8s.io/api/core/v1.CustomProbeData"),
 						},
 					},
 					"ReadinessProbe": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
+							Ref: ref("k8s.io/api/core/v1.CustomProbeData"),
 						},
 					},
 				},
-				Required: []string{"restartCount"},
 			},
 		},
+		Dependencies: []string{
+			"k8s.io/api/core/v1.CustomProbeData"},
 	}
 }
 
