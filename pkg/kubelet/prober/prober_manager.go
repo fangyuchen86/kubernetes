@@ -260,14 +260,24 @@ func (m *manager) CleanupPods(desiredPods map[types.UID]sets.Empty) {
 func (m *manager) UpdatePodStatus(podUID types.UID, pod *v1.Pod, podStatus *v1.PodStatus) {
 	for i, c := range podStatus.ContainerStatuses {
 		var started bool
+		var customProber []v1.CustomProbe
+		for _, container := range pod.Spec.Containers {
+			if container.Name == c.Name {
+				customProber = container.CustomProbe
+				break
+			}
+		}
 		if c.State.Running == nil {
 			started = false
 		} else if result, ok := m.startupManager.Get(kubecontainer.ParseContainerID(c.ContainerID)); ok {
 			started = result == results.Success
+		} else if result, ok := GetCustomProbeResult(c.Name, v1.CustomProbeStartupProbe, customProber, podStatus.ContainerProbeResults); ok {
+			started = c.RestartCount == result.RestartCount && result.ProbeResult == v1.CustomProbeSuccess
 		} else {
 			// The check whether there is a probe which hasn't run yet.
 			_, exists := m.getWorker(podUID, c.Name, startup)
-			started = !exists
+			customProberExists := CustomProbeExist(v1.CustomProbeStartupProbe, customProber)
+			started = !(exists || customProberExists)
 		}
 		podStatus.ContainerStatuses[i].Started = &started
 
@@ -277,6 +287,8 @@ func (m *manager) UpdatePodStatus(podUID types.UID, pod *v1.Pod, podStatus *v1.P
 				ready = false
 			} else if result, ok := m.readinessManager.Get(kubecontainer.ParseContainerID(c.ContainerID)); ok && result == results.Success {
 				ready = true
+			} else if result, ok := GetCustomProbeResult(c.Name, v1.CustomProbeReadinessProbe, customProber, podStatus.ContainerProbeResults); ok {
+				ready = c.RestartCount == result.RestartCount && result.ProbeResult == v1.CustomProbeSuccess
 			} else {
 				// The check whether there is a probe which hasn't run yet.
 				w, exists := m.getWorker(podUID, c.Name, readiness)
@@ -288,6 +300,9 @@ func (m *manager) UpdatePodStatus(podUID types.UID, pod *v1.Pod, podStatus *v1.P
 					default: // Non-blocking.
 						klog.InfoS("Failed to trigger a manual run", "probe", w.probeType.String())
 					}
+				}
+				if CustomProbeExist(v1.CustomProbeReadinessProbe, customProber) {
+					ready = false
 				}
 			}
 			podStatus.ContainerStatuses[i].Ready = ready
@@ -316,7 +331,7 @@ func CustomProbeExist(probeType v1.CustomProbe, customProber []v1.CustomProbe) b
 }
 
 type CustomProbeResult struct {
-	probeResult  v1.CustomProbeResult
+	ProbeResult  v1.CustomProbeResult
 	RestartCount int32
 }
 
@@ -342,7 +357,7 @@ func GetCustomProbeResult(name string, probeType v1.CustomProbe, customProber []
 	case v1.CustomProbeStartupProbe:
 		if probeResult.StartupProbe != "" {
 			return &CustomProbeResult{
-				probeResult:  probeResult.ReadinessProbe,
+				ProbeResult:  probeResult.ReadinessProbe,
 				RestartCount: 0,
 			}, true
 		} else {
@@ -351,7 +366,7 @@ func GetCustomProbeResult(name string, probeType v1.CustomProbe, customProber []
 	case v1.CustomProbeLivnessProbe:
 		if probeResult.LivenessProbe != "" {
 			return &CustomProbeResult{
-				probeResult:  probeResult.LivenessProbe,
+				ProbeResult:  probeResult.LivenessProbe,
 				RestartCount: 0,
 			}, true
 		} else {
@@ -360,7 +375,7 @@ func GetCustomProbeResult(name string, probeType v1.CustomProbe, customProber []
 	case v1.CustomProbeReadinessProbe:
 		if probeResult.ReadinessProbe != "" {
 			return &CustomProbeResult{
-				probeResult:  probeResult.ReadinessProbe,
+				ProbeResult:  probeResult.ReadinessProbe,
 				RestartCount: 0,
 			}, true
 		} else {

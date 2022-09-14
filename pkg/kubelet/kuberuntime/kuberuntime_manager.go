@@ -51,6 +51,7 @@ import (
 	"k8s.io/kubernetes/pkg/kubelet/lifecycle"
 	"k8s.io/kubernetes/pkg/kubelet/logs"
 	"k8s.io/kubernetes/pkg/kubelet/metrics"
+	prober "k8s.io/kubernetes/pkg/kubelet/prober"
 	proberesults "k8s.io/kubernetes/pkg/kubelet/prober/results"
 	"k8s.io/kubernetes/pkg/kubelet/runtimeclass"
 	"k8s.io/kubernetes/pkg/kubelet/sysctl"
@@ -625,6 +626,14 @@ func (m *kubeGenericRuntimeManager) computePodActions(pod *v1.Pod, podStatus *ku
 		} else if startup, found := m.startupManager.Get(containerStatus.ID); found && startup == proberesults.Failure {
 			// If the container failed the startup probe, we should kill it.
 			message = fmt.Sprintf("Container %s failed startup probe", container.Name)
+			reason = reasonStartupProbe
+		} else if customLiveness, found := prober.GetCustomProbeResult(container.Name, v1.CustomProbeLivnessProbe,
+			container.CustomProbe, pod.Status.ContainerProbeResults); found && int(customLiveness.RestartCount) == containerStatus.RestartCount && customLiveness.ProbeResult == v1.CustomProbeFailure {
+			message = fmt.Sprintf("Container %s failed custom liveness probe", container.Name)
+			reason = reasonLivenessProbe
+		} else if customStartup, found := prober.GetCustomProbeResult(container.Name, v1.CustomProbeStartupProbe,
+			container.CustomProbe, pod.Status.ContainerProbeResults); found && int(customStartup.RestartCount) == containerStatus.RestartCount && customStartup.ProbeResult == v1.CustomProbeFailure {
+			message = fmt.Sprintf("Container %s failed custom startup probe", container.Name)
 			reason = reasonStartupProbe
 		} else {
 			// Keep the container.
