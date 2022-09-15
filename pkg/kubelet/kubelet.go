@@ -19,6 +19,7 @@ package kubelet
 import (
 	"context"
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
 	"math"
 	"net"
@@ -1517,8 +1518,12 @@ func (kl *Kubelet) Run(updates <-chan kubetypes.PodUpdate) {
 // Callers should not write an event if this operation returns an error.
 func (kl *Kubelet) syncPod(ctx context.Context, updateType kubetypes.SyncPodType, pod, mirrorPod *v1.Pod, podStatus *kubecontainer.PodStatus) (isTerminal bool, err error) {
 	klog.V(4).InfoS("syncPod enter", "pod", klog.KObj(pod), "podUID", pod.UID)
+	data, _ := json.Marshal(pod)
+	klog.V(4).InfoS("syncPod enter data:", "pod", data)
 	defer func() {
 		klog.V(4).InfoS("syncPod exit", "pod", klog.KObj(pod), "podUID", pod.UID, "isTerminal", isTerminal)
+		data2, _ := json.Marshal(pod)
+		klog.V(4).InfoS("syncPod exit data:", "pod", data2)
 	}()
 
 	// Latency measurements for the main workflow are relative to the
@@ -2146,6 +2151,7 @@ func (kl *Kubelet) syncLoopIteration(configCh <-chan kubetypes.PodUpdate, handle
 		if update.Result == proberesults.Failure {
 			handleProbeSync(kl, update, handler, "liveness", "unhealthy")
 		}
+	//TODO need update container status
 	case update := <-kl.readinessManager.Updates():
 		ready := update.Result == proberesults.Success
 		kl.statusManager.SetContainerReadiness(update.PodUID, update.ContainerID, ready)
