@@ -132,7 +132,7 @@ func NewManager(kubeClient clientset.Interface, podManager kubepod.Manager, podD
 }
 
 // isPodStatusByKubeletEqual returns true if the given pod statuses are equal when non-kubelet-owned
-// pod conditions are excluded.
+// pod conditions and containerProbeResults are excluded.
 // This method normalizes the status before comparing so as to make sure that meaningless
 // changes will be ignored.
 func isPodStatusByKubeletEqual(oldStatus, status *v1.PodStatus) bool {
