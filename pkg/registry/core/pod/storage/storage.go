@@ -318,8 +318,6 @@ func (r *StatusREST) Get(ctx context.Context, name string, options *metav1.GetOp
 func (r *StatusREST) Update(ctx context.Context, name string, objInfo rest.UpdatedObjectInfo, createValidation rest.ValidateObjectFunc, updateValidation rest.ValidateObjectUpdateFunc, forceAllowCreate bool, options *metav1.UpdateOptions) (runtime.Object, bool, error) {
 	// We are explicitly setting forceAllowCreate to false in the call to the underlying storage because
 	// subresources should never allow create on update.
-	byteString, _ := json.Marshal(objInfo)
-	klog.V(2).InfoS("FYC2 update", "pod", byteString)
 	return r.store.Update(ctx, name, objInfo, createValidation, updateValidation, false, options)
 }
 
