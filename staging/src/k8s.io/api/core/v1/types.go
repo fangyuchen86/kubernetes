@@ -2644,16 +2644,16 @@ const (
 // +enum
 type CustomProbeData struct {
 	RestartCount int32             `json:"restartCount" protobuf:"varint,1,opt,name=restartCount"`
-	ProbeResult  CustomProbeResult `json:"customProbeResult" protobuf:"bytes,2,opt,name=customProbeResult"`
+	Status       CustomProbeResult `json:"status" protobuf:"bytes,2,opt,name=status"`
 }
 
 type CustomProbeStatus struct {
 	// +optional
 	LivenessProbe *CustomProbeData `json:"livenessProbe,omitempty" protobuf:"bytes,1,opt,name=livenessProbe"`
 	// +optional
-	StartupProbe *CustomProbeData `json:"StartupProbe,omitempty" protobuf:"bytes,2,opt,name=startupProbe"`
+	StartupProbe *CustomProbeData `json:"startupProbe,omitempty" protobuf:"bytes,2,opt,name=startupProbe"`
 	// +optional
-	ReadinessProbe *CustomProbeData `json:"ReadinessProbe,omitempty" protobuf:"bytes,3,opt,name=readinessProbe"`
+	ReadinessProbe *CustomProbeData `json:"readinessProbe,omitempty" protobuf:"bytes,3,opt,name=readinessProbe"`
 }
 
 // PodPhase is a label for the condition of a pod at the current time.

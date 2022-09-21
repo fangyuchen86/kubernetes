@@ -2415,7 +2415,7 @@ const (
 
 type CustomProbeData struct {
 	RestartCount int32
-	ProbeResult  CustomProbeResult
+	Status       CustomProbeResult
 }
 
 type CustomProbeStatus struct {

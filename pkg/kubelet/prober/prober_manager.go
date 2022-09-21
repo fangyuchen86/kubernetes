@@ -274,7 +274,7 @@ func (m *manager) UpdatePodStatus(podUID types.UID, podSpec *v1.PodSpec, podStat
 		} else if result, ok := m.startupManager.Get(kubecontainer.ParseContainerID(c.ContainerID)); ok {
 			started = result == results.Success
 		} else if result, ok := GetCustomProbeResult(v1.CustomProbeStartupProbe, customProbers, customProbeStatus); ok {
-			started = c.RestartCount == result.RestartCount && result.ProbeResult == v1.CustomProbeSuccess
+			started = c.RestartCount == result.RestartCount && result.Status == v1.CustomProbeSuccess
 		} else {
 			// The check whether there is a probe which hasn't run yet.
 			_, exists := m.getWorker(podUID, c.Name, startup)
@@ -290,7 +290,7 @@ func (m *manager) UpdatePodStatus(podUID types.UID, podSpec *v1.PodSpec, podStat
 			} else if result, ok := m.readinessManager.Get(kubecontainer.ParseContainerID(c.ContainerID)); ok && result == results.Success {
 				ready = true
 			} else if result, ok := GetCustomProbeResult(v1.CustomProbeReadinessProbe, customProbers, customProbeStatus); ok {
-				ready = c.RestartCount == result.RestartCount && result.ProbeResult == v1.CustomProbeSuccess
+				ready = c.RestartCount == result.RestartCount && result.Status == v1.CustomProbeSuccess
 			} else {
 				// The check whether there is a probe which hasn't run yet.
 				w, exists := m.getWorker(podUID, c.Name, readiness)
