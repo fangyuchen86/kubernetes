@@ -102,6 +102,8 @@ var allowedEphemeralContainerFields = map[string]bool{
 // https://github.com/opencontainers/runtime-spec/blob/master/config.md#platform-specific-configuration
 var validOS = sets.NewString(string(core.Linux), string(core.Windows))
 
+var supportCustomProbeType [3]core.CustomProbe = [3]core.CustomProbe{core.CustomProbeStartupProbe, core.CustomProbeLivnessProbe, core.CustomProbeStartupProbe}
+
 // ValidateHasLabel requires that metav1.ObjectMeta has a Label with key and expectedValue
 func ValidateHasLabel(meta metav1.ObjectMeta, fldPath *field.Path, key, expectedValue string) field.ErrorList {
 	allErrs := field.ErrorList{}
@@ -2730,6 +2732,25 @@ func validateProbe(probe *core.Probe, fldPath *field.Path) field.ErrorList {
 	return allErrs
 }
 
+func validateCustomProbes(customProbes []core.CustomProbe, fldPath *field.Path) field.ErrorList {
+	allErrs := field.ErrorList{}
+	if customProbes == nil {
+		return allErrs
+	}
+	for _, customProbe := range customProbes {
+		found := false
+		for _, e := range supportCustomProbeType {
+			if customProbe == e {
+				found = true
+			}
+		}
+		if !found {
+			allErrs = append(allErrs, field.Invalid(fldPath, customProbe, "must be value of livenessProbe, startupProbe, readinessProbe"))
+		}
+	}
+	return allErrs
+}
+
 type commonHandler struct {
 	Exec      *core.ExecAction
 	HTTPGet   *core.HTTPGetAction
@@ -3190,6 +3211,7 @@ func validateContainers(containers []core.Container, volumes map[string]core.Vol
 		if ctr.StartupProbe != nil && ctr.StartupProbe.SuccessThreshold != 1 {
 			allErrs = append(allErrs, field.Invalid(path.Child("startupProbe", "successThreshold"), ctr.StartupProbe.SuccessThreshold, "must be 1"))
 		}
+		allErrs = append(allErrs, validateCustomProbes(ctr.CustomProbes, path.Child("customProbes"))...)
 	}
 
 	// Port conflicts are checked across all containers

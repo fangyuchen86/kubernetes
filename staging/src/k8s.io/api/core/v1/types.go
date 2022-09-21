@@ -2235,7 +2235,7 @@ const (
 
 	CustomProbeStartupProbe CustomProbe = "startupProbe"
 
-	CustomProbeReadinessProbe CustomProbe = "ReadinessProbe"
+	CustomProbeReadinessProbe CustomProbe = "readinessProbe"
 )
 
 // PullPolicy describes a policy for if/when to pull a container image
