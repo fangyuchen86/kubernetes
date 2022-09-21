@@ -146,7 +146,6 @@ func isPodStatusByKubeletEqual(oldStatus, status *v1.PodStatus) bool {
 		}
 	}
 	oldCopy.Conditions = status.Conditions
-	oldCopy.ContainerProbeResults = status.ContainerProbeResults
 	return apiequality.Semantic.DeepEqual(oldCopy, status)
 }
 
