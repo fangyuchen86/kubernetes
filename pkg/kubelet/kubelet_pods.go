@@ -1632,12 +1632,6 @@ func (kl *Kubelet) convertStatusToAPIStatus(pod *v1.Pod, podStatus *kubecontaine
 		false,
 	)
 
-	var containerProbeResults []v1.ContainerProbeResult
-	for _, v := range pod.Status.ContainerProbeResults {
-		containerProbeResults = append(containerProbeResults, v)
-	}
-	apiPodStatus.ContainerProbeResults = containerProbeResults
-
 	return &apiPodStatus
 }
 
