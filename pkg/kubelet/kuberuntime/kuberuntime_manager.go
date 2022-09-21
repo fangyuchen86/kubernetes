@@ -627,12 +627,12 @@ func (m *kubeGenericRuntimeManager) computePodActions(pod *v1.Pod, podStatus *ku
 			// If the container failed the startup probe, we should kill it.
 			message = fmt.Sprintf("Container %s failed startup probe", container.Name)
 			reason = reasonStartupProbe
-		} else if customLiveness, found := prober.GetCustomProbeResult(container.Name, v1.CustomProbeLivnessProbe,
-			container.CustomProbes, pod.Status.ContainerProbeResults); found && int(customLiveness.RestartCount) == containerStatus.RestartCount && customLiveness.ProbeResult == v1.CustomProbeFailure {
+		} else if customLiveness, found := prober.GetCustomProbeResult(v1.CustomProbeLivnessProbe,
+			container.CustomProbes, container.CustomProbeStatus); found && int(customLiveness.RestartCount) == containerStatus.RestartCount && customLiveness.ProbeResult == v1.CustomProbeFailure {
 			message = fmt.Sprintf("Container %s failed custom liveness probe", container.Name)
 			reason = reasonLivenessProbe
-		} else if customStartup, found := prober.GetCustomProbeResult(container.Name, v1.CustomProbeStartupProbe,
-			container.CustomProbes, pod.Status.ContainerProbeResults); found && int(customStartup.RestartCount) == containerStatus.RestartCount && customStartup.ProbeResult == v1.CustomProbeFailure {
+		} else if customStartup, found := prober.GetCustomProbeResult(v1.CustomProbeStartupProbe,
+			container.CustomProbes, container.CustomProbeStatus); found && int(customStartup.RestartCount) == containerStatus.RestartCount && customStartup.ProbeResult == v1.CustomProbeFailure {
 			message = fmt.Sprintf("Container %s failed custom startup probe", container.Name)
 			reason = reasonStartupProbe
 		} else {

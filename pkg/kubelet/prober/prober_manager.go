@@ -86,7 +86,7 @@ type Manager interface {
 
 	// UpdatePodStatus modifies the given PodStatus with the appropriate Ready state for each
 	// container based on container running status, cached probe results and worker states.
-	UpdatePodStatus(types.UID, *v1.Pod, *v1.PodStatus)
+	UpdatePodStatus(types.UID, *v1.PodSpec, *v1.PodStatus)
 }
 
 type manager struct {
@@ -257,13 +257,15 @@ func (m *manager) CleanupPods(desiredPods map[types.UID]sets.Empty) {
 	}
 }
 
-func (m *manager) UpdatePodStatus(podUID types.UID, pod *v1.Pod, podStatus *v1.PodStatus) {
+func (m *manager) UpdatePodStatus(podUID types.UID, podSpec *v1.PodSpec, podStatus *v1.PodStatus) {
 	for i, c := range podStatus.ContainerStatuses {
 		var started bool
 		var customProbers []v1.CustomProbe
-		for _, container := range pod.Spec.Containers {
+		var customProbeStatus *v1.CustomProbeStatus
+		for _, container := range podSpec.Containers {
 			if container.Name == c.Name {
 				customProbers = container.CustomProbes
+				customProbeStatus = container.CustomProbeStatus
 				break
 			}
 		}
@@ -271,7 +273,7 @@ func (m *manager) UpdatePodStatus(podUID types.UID, pod *v1.Pod, podStatus *v1.P
 			started = false
 		} else if result, ok := m.startupManager.Get(kubecontainer.ParseContainerID(c.ContainerID)); ok {
 			started = result == results.Success
-		} else if result, ok := GetCustomProbeResult(c.Name, v1.CustomProbeStartupProbe, customProbers, podStatus.ContainerProbeResults); ok {
+		} else if result, ok := GetCustomProbeResult(v1.CustomProbeStartupProbe, customProbers, customProbeStatus); ok {
 			started = c.RestartCount == result.RestartCount && result.ProbeResult == v1.CustomProbeSuccess
 		} else {
 			// The check whether there is a probe which hasn't run yet.
@@ -287,7 +289,7 @@ func (m *manager) UpdatePodStatus(podUID types.UID, pod *v1.Pod, podStatus *v1.P
 				ready = false
 			} else if result, ok := m.readinessManager.Get(kubecontainer.ParseContainerID(c.ContainerID)); ok && result == results.Success {
 				ready = true
-			} else if result, ok := GetCustomProbeResult(c.Name, v1.CustomProbeReadinessProbe, customProbers, podStatus.ContainerProbeResults); ok {
+			} else if result, ok := GetCustomProbeResult(v1.CustomProbeReadinessProbe, customProbers, customProbeStatus); ok {
 				ready = c.RestartCount == result.RestartCount && result.ProbeResult == v1.CustomProbeSuccess
 			} else {
 				// The check whether there is a probe which hasn't run yet.
@@ -330,31 +332,18 @@ func CustomProbeExist(probeType v1.CustomProbe, customProber []v1.CustomProbe) b
 	return false
 }
 
-func GetCustomProbeResult(name string, probeType v1.CustomProbe, customProber []v1.CustomProbe, containerProbeResult []v1.ContainerProbeResult) (*v1.CustomProbeData, bool) {
-	if !CustomProbeExist(probeType, customProber) || len(containerProbeResult) == 0 {
-		return nil, false
-	}
-
-	var probeResult v1.ProbeResult
-	found := false
-	for _, v := range containerProbeResult {
-		if v.Name == name {
-			probeResult = v.ProbeResult
-			found = true
-		}
-	}
-
-	if !found {
+func GetCustomProbeResult(probeType v1.CustomProbe, customProber []v1.CustomProbe, containerProbeStatus *v1.CustomProbeStatus) (*v1.CustomProbeData, bool) {
+	if !CustomProbeExist(probeType, customProber) || containerProbeStatus == nil {
 		return nil, false
 	}
 
 	switch probeType {
 	case v1.CustomProbeStartupProbe:
-		return probeResult.StartupProbe, probeResult.StartupProbe != nil
+		return containerProbeStatus.StartupProbe, containerProbeStatus.StartupProbe != nil
 	case v1.CustomProbeLivnessProbe:
-		return probeResult.LivenessProbe, probeResult.LivenessProbe != nil
+		return containerProbeStatus.LivenessProbe, containerProbeStatus.LivenessProbe != nil
 	case v1.CustomProbeReadinessProbe:
-		return probeResult.ReadinessProbe, probeResult.ReadinessProbe != nil
+		return containerProbeStatus.ReadinessProbe, containerProbeStatus.ReadinessProbe != nil
 	default:
 		return nil, false
 	}

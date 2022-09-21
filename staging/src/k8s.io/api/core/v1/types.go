@@ -2411,9 +2411,12 @@ type Container struct {
 	// More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
 	// +optional
 	StartupProbe *Probe `json:"startupProbe,omitempty" protobuf:"bytes,22,opt,name=startupProbe"`
-	// CusomProbe indicates that the prober which uses third party prober to do the prober
+	// CustomProbe indicates that the prober which uses third party prober to do the prober
 	// +optional
 	CustomProbes []CustomProbe `json:"customProbes,omitempty" protobuf:"bytes,23,opt,name=customProbes"`
+	// CustomProbeStatus show the results of the custom prober
+	// +optional
+	CustomProbeStatus *CustomProbeStatus `json:"customProbeStatus,omitempty" protobuf:"bytes,24,opt,name=customProbeStatus"`
 	// Actions that the management system should take in response to container lifecycle events.
 	// Cannot be updated.
 	// +optional
@@ -2630,11 +2633,6 @@ type ContainerStatus struct {
 	Started *bool `json:"started,omitempty" protobuf:"varint,9,opt,name=started"`
 }
 
-type ContainerProbeResult struct {
-	Name        string      `json:"name" protobuf:"bytes,1,opt,name=name"`
-	ProbeResult ProbeResult `json:"probeResult" protobuf:"bytes,2,opt,name=probeResult"`
-}
-
 type CustomProbeResult string
 
 const (
@@ -2642,13 +2640,14 @@ const (
 	CustomProbeFailure CustomProbeResult = "Failure"
 )
 
+// CustomProbeData contains probe results with RestartCount
 // +enum
 type CustomProbeData struct {
 	RestartCount int32             `json:"restartCount" protobuf:"varint,1,opt,name=restartCount"`
 	ProbeResult  CustomProbeResult `json:"customProbeResult" protobuf:"bytes,2,opt,name=customProbeResult"`
 }
 
-type ProbeResult struct {
+type CustomProbeStatus struct {
 	// +optional
 	LivenessProbe *CustomProbeData `json:"livenessProbe,omitempty" protobuf:"bytes,1,opt,name=livenessProbe"`
 	// +optional
@@ -3811,6 +3810,9 @@ type EphemeralContainerCommon struct {
 	// CusomProbe indicates that the prober which uses third party prober to do the prober
 	// +optional
 	CustomProbes []CustomProbe `json:"customProbes,omitempty" protobuf:"bytes,23,opt,name=customProbes"`
+	// CustomProbeStatus show the results of the custom prober
+	// +optional
+	CustomProbeStatus *CustomProbeStatus `json:"customProbeStatus,omitempty" protobuf:"bytes,24,opt,name=customProbeStatus"`
 	// Lifecycle is not allowed for ephemeral containers.
 	// +optional
 	Lifecycle *Lifecycle `json:"lifecycle,omitempty" protobuf:"bytes,12,opt,name=lifecycle"`
@@ -3982,9 +3984,6 @@ type PodStatus struct {
 	// Status for any ephemeral containers that have run in this pod.
 	// +optional
 	EphemeralContainerStatuses []ContainerStatus `json:"ephemeralContainerStatuses,omitempty" protobuf:"bytes,13,rep,name=ephemeralContainerStatuses"`
-
-	// +optional
-	ContainerProbeResults []ContainerProbeResult `json:"containerProbeResults,omitempty" protobuf:"bytes,14,rep,name=containerProbeResults"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

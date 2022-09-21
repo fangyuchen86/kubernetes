@@ -2229,6 +2229,8 @@ type Container struct {
 	// +optional
 	CustomProbes []CustomProbe
 	// +optional
+	CustomProbeStatus *CustomProbeStatus
+	// +optional
 	Lifecycle *Lifecycle
 	// Required.
 	// +optional
@@ -2403,11 +2405,7 @@ type ContainerStatus struct {
 	Started     *bool
 }
 
-type ContainerProbeResult struct {
-	Name        string
-	ProbeResult ProbeResult
-}
-
+// CustomProbeData contains probe results with RestartCount
 type CustomProbeResult string
 
 const (
@@ -2420,7 +2418,7 @@ type CustomProbeData struct {
 	ProbeResult  CustomProbeResult
 }
 
-type ProbeResult struct {
+type CustomProbeStatus struct {
 	// +optional
 	LivenessProbe *CustomProbeData
 	// +optional
@@ -3345,8 +3343,12 @@ type EphemeralContainerCommon struct {
 	// Probes are not allowed for ephemeral containers.
 	// +optional
 	StartupProbe *Probe
+	// CustomProbe indicates that the prober which uses third party prober to do the prober
 	// +optional
 	CustomProbes []CustomProbe
+	// CustomProbeStatus show the results of the custom prober
+	// +optional
+	CustomProbeStatus *CustomProbeStatus
 	// Lifecycle is not allowed for ephemeral containers.
 	// +optional
 	Lifecycle *Lifecycle
@@ -3448,9 +3450,6 @@ type PodStatus struct {
 	// Status for any ephemeral containers that have run in this pod.
 	// +optional
 	EphemeralContainerStatuses []ContainerStatus
-
-	// +optional
-	ContainerProbeResults []ContainerProbeResult
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
