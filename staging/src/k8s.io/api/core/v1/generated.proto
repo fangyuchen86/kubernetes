@@ -730,9 +730,13 @@ message Container {
   // +optional
   optional Probe startupProbe = 22;
 
-  // CusomProbe indicates that the prober which uses third party prober to do the prober
+  // CustomProbe indicates that the prober which uses third party prober to do the prober
   // +optional
   repeated string customProbes = 23;
+
+  // CustomProbeStatus show the results of the custom prober
+  // +optional
+  optional CustomProbeStatus customProbeStatus = 24;
 
   // Actions that the management system should take in response to container lifecycle events.
   // Cannot be updated.
@@ -835,12 +839,6 @@ message ContainerPort {
   // What host IP to bind the external port to.
   // +optional
   optional string hostIP = 5;
-}
-
-message ContainerProbeResult {
-  optional string name = 1;
-
-  optional ProbeResult probeResult = 2;
 }
 
 // ContainerState holds a possible state of container.
@@ -947,11 +945,23 @@ message ContainerStatus {
   optional bool started = 9;
 }
 
+// CustomProbeData contains probe results with RestartCount
 // +enum
 message CustomProbeData {
   optional int32 restartCount = 1;
 
   optional string customProbeResult = 2;
+}
+
+message CustomProbeStatus {
+  // +optional
+  optional CustomProbeData livenessProbe = 1;
+
+  // +optional
+  optional CustomProbeData startupProbe = 2;
+
+  // +optional
+  optional CustomProbeData readinessProbe = 3;
 }
 
 // DaemonEndpoint contains information about a single Daemon endpoint.
@@ -1339,6 +1349,10 @@ message EphemeralContainerCommon {
   // CusomProbe indicates that the prober which uses third party prober to do the prober
   // +optional
   repeated string customProbes = 23;
+
+  // CustomProbeStatus show the results of the custom prober
+  // +optional
+  optional CustomProbeStatus customProbeStatus = 24;
 
   // Lifecycle is not allowed for ephemeral containers.
   // +optional
@@ -3863,9 +3877,6 @@ message PodStatus {
   // Status for any ephemeral containers that have run in this pod.
   // +optional
   repeated ContainerStatus ephemeralContainerStatuses = 13;
-
-  // +optional
-  repeated ContainerProbeResult containerProbeResults = 14;
 }
 
 // PodStatusResult is a wrapper for PodStatus returned by kubelet that can be encode/decoded
@@ -4062,17 +4073,6 @@ message ProbeHandler {
   // +featureGate=GRPCContainerProbe
   // +optional
   optional GRPCAction grpc = 4;
-}
-
-message ProbeResult {
-  // +optional
-  optional CustomProbeData livenessProbe = 1;
-
-  // +optional
-  optional CustomProbeData startupProbe = 2;
-
-  // +optional
-  optional CustomProbeData readinessProbe = 3;
 }
 
 // Represents a projected volume source
