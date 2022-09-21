@@ -950,7 +950,7 @@ message ContainerStatus {
 message CustomProbeData {
   optional int32 restartCount = 1;
 
-  optional string customProbeResult = 2;
+  optional string status = 2;
 }
 
 message CustomProbeStatus {
