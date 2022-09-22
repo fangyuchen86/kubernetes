@@ -261,11 +261,9 @@ func (m *manager) UpdatePodStatus(podUID types.UID, podSpec *v1.PodSpec, podStat
 	for i, c := range podStatus.ContainerStatuses {
 		var started bool
 		var customProbers []v1.CustomProbe
-		var customProbeStatus *v1.CustomProbeStatus
 		for _, container := range podSpec.Containers {
 			if container.Name == c.Name {
 				customProbers = container.CustomProbes
-				customProbeStatus = container.CustomProbeStatus
 				break
 			}
 		}
@@ -273,7 +271,7 @@ func (m *manager) UpdatePodStatus(podUID types.UID, podSpec *v1.PodSpec, podStat
 			started = false
 		} else if result, ok := m.startupManager.Get(kubecontainer.ParseContainerID(c.ContainerID)); ok {
 			started = result == results.Success
-		} else if result, ok := GetCustomProbeResult(v1.CustomProbeStartupProbe, customProbers, customProbeStatus); ok {
+		} else if result, ok := GetCustomProbeResult(c.Name, v1.CustomProbeStartupProbe, customProbers, podSpec.ContainerCustomProbeStatus); ok {
 			started = c.RestartCount == result.RestartCount && result.Status == v1.CustomProbeSuccess
 		} else {
 			// The check whether there is a probe which hasn't run yet.
@@ -289,7 +287,7 @@ func (m *manager) UpdatePodStatus(podUID types.UID, podSpec *v1.PodSpec, podStat
 				ready = false
 			} else if result, ok := m.readinessManager.Get(kubecontainer.ParseContainerID(c.ContainerID)); ok && result == results.Success {
 				ready = true
-			} else if result, ok := GetCustomProbeResult(v1.CustomProbeReadinessProbe, customProbers, customProbeStatus); ok {
+			} else if result, ok := GetCustomProbeResult(c.Name, v1.CustomProbeReadinessProbe, customProbers, podSpec.ContainerCustomProbeStatus); ok {
 				ready = c.RestartCount == result.RestartCount && result.Status == v1.CustomProbeSuccess
 			} else {
 				// The check whether there is a probe which hasn't run yet.
@@ -332,8 +330,20 @@ func CustomProbeExist(probeType v1.CustomProbe, customProber []v1.CustomProbe) b
 	return false
 }
 
-func GetCustomProbeResult(probeType v1.CustomProbe, customProber []v1.CustomProbe, containerProbeStatus *v1.CustomProbeStatus) (*v1.CustomProbeData, bool) {
-	if !CustomProbeExist(probeType, customProber) || containerProbeStatus == nil {
+func GetCustomProbeResult(name string, probeType v1.CustomProbe, customProber []v1.CustomProbe, containerCustomProbeStatus []v1.CustomProbeStatus) (*v1.CustomProbeData, bool) {
+	if !CustomProbeExist(probeType, customProber) {
+		return nil, false
+	}
+
+	found := false
+	var containerProbeStatus v1.CustomProbeStatus
+	for _, v := range containerCustomProbeStatus {
+		if v.Name == name {
+			found = true
+			containerProbeStatus = v
+		}
+	}
+	if found == false {
 		return nil, false
 	}
 

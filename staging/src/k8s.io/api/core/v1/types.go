@@ -2414,9 +2414,6 @@ type Container struct {
 	// CustomProbe indicates that the prober which uses third party prober to do the prober
 	// +optional
 	CustomProbes []CustomProbe `json:"customProbes,omitempty" protobuf:"bytes,23,opt,name=customProbes"`
-	// CustomProbeStatus show the results of the custom prober
-	// +optional
-	CustomProbeStatus *CustomProbeStatus `json:"customProbeStatus,omitempty" protobuf:"bytes,24,opt,name=customProbeStatus"`
 	// Actions that the management system should take in response to container lifecycle events.
 	// Cannot be updated.
 	// +optional
@@ -2648,12 +2645,15 @@ type CustomProbeData struct {
 }
 
 type CustomProbeStatus struct {
+	// This must be a DNS_LABEL. Each container in a pod must have a unique name.
+	// Cannot be updated.
+	Name string `json:"name" protobuf:"bytes,1,opt,name=name"`
 	// +optional
-	LivenessProbe *CustomProbeData `json:"livenessProbe,omitempty" protobuf:"bytes,1,opt,name=livenessProbe"`
+	LivenessProbe *CustomProbeData `json:"livenessProbe,omitempty" protobuf:"bytes,2,opt,name=livenessProbe"`
 	// +optional
-	StartupProbe *CustomProbeData `json:"startupProbe,omitempty" protobuf:"bytes,2,opt,name=startupProbe"`
+	StartupProbe *CustomProbeData `json:"startupProbe,omitempty" protobuf:"bytes,3,opt,name=startupProbe"`
 	// +optional
-	ReadinessProbe *CustomProbeData `json:"readinessProbe,omitempty" protobuf:"bytes,3,opt,name=readinessProbe"`
+	ReadinessProbe *CustomProbeData `json:"readinessProbe,omitempty" protobuf:"bytes,4,opt,name=readinessProbe"`
 }
 
 // PodPhase is a label for the condition of a pod at the current time.
@@ -3136,6 +3136,9 @@ type PodSpec struct {
 	// +patchMergeKey=name
 	// +patchStrategy=merge
 	Containers []Container `json:"containers" patchStrategy:"merge" patchMergeKey:"name" protobuf:"bytes,2,rep,name=containers"`
+	// ContainerCustomProbeStatus show the results of the custom prober
+	// +optional
+	ContainerCustomProbeStatus []CustomProbeStatus `json:"containerCustomProbeStatus,omitempty" protobuf:"bytes,35,opt,name=containerCustomProbeStatus"`
 	// List of ephemeral containers run in this pod. Ephemeral containers may be run in an existing
 	// pod to perform user-initiated actions such as debugging. This list cannot be specified when
 	// creating a pod, and it cannot be modified by updating the pod spec. In order to add an
@@ -3810,9 +3813,6 @@ type EphemeralContainerCommon struct {
 	// CusomProbe indicates that the prober which uses third party prober to do the prober
 	// +optional
 	CustomProbes []CustomProbe `json:"customProbes,omitempty" protobuf:"bytes,23,opt,name=customProbes"`
-	// CustomProbeStatus show the results of the custom prober
-	// +optional
-	CustomProbeStatus *CustomProbeStatus `json:"customProbeStatus,omitempty" protobuf:"bytes,24,opt,name=customProbeStatus"`
 	// Lifecycle is not allowed for ephemeral containers.
 	// +optional
 	Lifecycle *Lifecycle `json:"lifecycle,omitempty" protobuf:"bytes,12,opt,name=lifecycle"`

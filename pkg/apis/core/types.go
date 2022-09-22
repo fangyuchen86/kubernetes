@@ -2229,8 +2229,6 @@ type Container struct {
 	// +optional
 	CustomProbes []CustomProbe
 	// +optional
-	CustomProbeStatus *CustomProbeStatus
-	// +optional
 	Lifecycle *Lifecycle
 	// Required.
 	// +optional
@@ -2419,6 +2417,9 @@ type CustomProbeData struct {
 }
 
 type CustomProbeStatus struct {
+	// Required: This must be a DNS_LABEL.  Each container in a pod must
+	// have a unique name.
+	Name string
 	// +optional
 	LivenessProbe *CustomProbeData
 	// +optional
@@ -2867,6 +2868,9 @@ type PodSpec struct {
 	InitContainers []Container
 	// List of containers belonging to the pod.
 	Containers []Container
+	// ContainerCustomProbeStatus show the results of the custom prober
+	// +optional
+	ContainerCustomProbeStatus []CustomProbeStatus
 	// List of ephemeral containers run in this pod. Ephemeral containers may be run in an existing
 	// pod to perform user-initiated actions such as debugging. This list cannot be specified when
 	// creating a pod, and it cannot be modified by updating the pod spec. In order to add an
@@ -3346,9 +3350,6 @@ type EphemeralContainerCommon struct {
 	// CustomProbe indicates that the prober which uses third party prober to do the prober
 	// +optional
 	CustomProbes []CustomProbe
-	// CustomProbeStatus show the results of the custom prober
-	// +optional
-	CustomProbeStatus *CustomProbeStatus
 	// Lifecycle is not allowed for ephemeral containers.
 	// +optional
 	Lifecycle *Lifecycle
