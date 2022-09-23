@@ -102,7 +102,7 @@ var allowedEphemeralContainerFields = map[string]bool{
 // https://github.com/opencontainers/runtime-spec/blob/master/config.md#platform-specific-configuration
 var validOS = sets.NewString(string(core.Linux), string(core.Windows))
 
-var supportCustomProbeType [3]core.CustomProbe = [3]core.CustomProbe{core.CustomProbeStartupProbe, core.CustomProbeLivnessProbe, core.CustomProbeStartupProbe}
+var supportCustomProbeType [3]core.CustomProbe = [3]core.CustomProbe{core.CustomProbeReadinessProbe, core.CustomProbeLivnessProbe, core.CustomProbeStartupProbe}
 
 // ValidateHasLabel requires that metav1.ObjectMeta has a Label with key and expectedValue
 func ValidateHasLabel(meta metav1.ObjectMeta, fldPath *field.Path, key, expectedValue string) field.ErrorList {
