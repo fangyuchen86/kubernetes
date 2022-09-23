@@ -734,10 +734,6 @@ message Container {
   // +optional
   repeated string customProbes = 23;
 
-  // CustomProbeStatus show the results of the custom prober
-  // +optional
-  optional CustomProbeStatus customProbeStatus = 24;
-
   // Actions that the management system should take in response to container lifecycle events.
   // Cannot be updated.
   // +optional
@@ -954,14 +950,18 @@ message CustomProbeData {
 }
 
 message CustomProbeStatus {
-  // +optional
-  optional CustomProbeData livenessProbe = 1;
+  // This must be a DNS_LABEL. Each container in a pod must have a unique name.
+  // Cannot be updated.
+  optional string name = 1;
 
   // +optional
-  optional CustomProbeData startupProbe = 2;
+  optional CustomProbeData livenessProbe = 2;
 
   // +optional
-  optional CustomProbeData readinessProbe = 3;
+  optional CustomProbeData startupProbe = 3;
+
+  // +optional
+  optional CustomProbeData readinessProbe = 4;
 }
 
 // DaemonEndpoint contains information about a single Daemon endpoint.
@@ -1349,10 +1349,6 @@ message EphemeralContainerCommon {
   // CusomProbe indicates that the prober which uses third party prober to do the prober
   // +optional
   repeated string customProbes = 23;
-
-  // CustomProbeStatus show the results of the custom prober
-  // +optional
-  optional CustomProbeStatus customProbeStatus = 24;
 
   // Lifecycle is not allowed for ephemeral containers.
   // +optional
@@ -3518,6 +3514,10 @@ message PodSpec {
   // +patchMergeKey=name
   // +patchStrategy=merge
   repeated Container containers = 2;
+
+  // ContainerCustomProbeStatus show the results of the custom prober
+  // +optional
+  repeated CustomProbeStatus containerCustomProbeStatus = 38;
 
   // List of ephemeral containers run in this pod. Ephemeral containers may be run in an existing
   // pod to perform user-initiated actions such as debugging. This list cannot be specified when
